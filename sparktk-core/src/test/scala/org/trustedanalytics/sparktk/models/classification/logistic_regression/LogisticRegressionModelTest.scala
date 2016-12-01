@@ -15,12 +15,18 @@
  */
 package org.trustedanalytics.sparktk.models.classification.logistic_regression
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.GenericRow
 import org.scalatest.Matchers
 import org.trustedanalytics.sparktk.frame.{ Frame, DataTypes, Column, FrameSchema }
 import org.trustedanalytics.sparktk.testutils.TestingSparkContextWordSpec
-
+import com.google.protobuf.ByteString
+import org.apache.hadoop.io.{Text, LongWritable, NullWritable, BytesWritable}
+import org.apache.spark.{SparkConf, SparkContext}
+import org.tensorflow.example.{BytesList, Int64List, Feature, Features, Example}
+import org.tensorflow.hadoop.io.{TFRecordFileInputFormat, TFRecordFileOutputFormat}
 class LogisticRegressionModelTest extends TestingSparkContextWordSpec with Matchers {
 
   // Test training data and schema
@@ -41,6 +47,31 @@ class LogisticRegressionModelTest extends TestingSparkContextWordSpec with Match
   val obsColumns = List("Sepal_Length", "Petal_Length")
   val labelColumn = "Class"
 
+  "test" should {
+    "test tf" in {
+      val rdd = sparkContext.parallelize(Array("my", "little", "pony"))
+      var features = rdd.map(line => {
+        val text = BytesList.newBuilder().addValue(ByteString.copyFrom(line.getBytes)).build()
+        val features = Features.newBuilder()
+          .putFeature("text", Feature.newBuilder().setBytesList(text).build())
+          .build()
+        val example = Example.newBuilder()
+          .setFeatures(features)
+          .build()
+        (new BytesWritable(example.toByteArray), NullWritable.get())
+      })
+
+      features.saveAsNewAPIHadoopFile[TFRecordFileOutputFormat]("file:///tmp/tfrecs")
+    }
+    "read test tf" in {
+      val path = "file:///tmp/tfrecs"
+      //val conf : Configuration = new Configuration(sparkContext.getConf)
+
+      val rdd = sparkContext.newAPIHadoopFile(path, classOf[TFRecordFileInputFormat], classOf[BytesWritable], classOf[NullWritable])
+      rdd
+
+    }
+  }
   "LogisticRegressionModel train" should {
     "return a LogisticRegressionModel after training" in {
       val rdd = sparkContext.parallelize(rows)
