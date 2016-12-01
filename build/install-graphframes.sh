@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 #  Copyright (c) 2016 Intel Corporation 
 #
@@ -15,12 +16,7 @@
 #
 
 
-NAME="[`basename $BASH_SOURCE[0]`]"
-DIR="$( cd "$( dirname "$BASH_SOURCE[0]" )" && pwd )"
-echo "$NAME DIR=$DIR"
-
-MAINDIR="$(dirname $DIR)"
-MAINDIR="$(dirname $MAINDIR)"
-
-sparktkpackage=$MAINDIR/sparktkinstall
-
+wget $GRAHPFRAMES -O $BASE_DIR/graphframes.jar
+unzip -o $BASE_DIR/graphframes.jar "graphframes/*" $BASE_DIR/
+ls -la $BASE_DIR/graphframes
+cp -Rv $BASE_DIR/graphframes $PYTHON_ENV_DIR/local/lib/python2.7/site-packages/

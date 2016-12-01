@@ -15,13 +15,20 @@
 #  limitations under the License.
 #
 
-source common.sh
+NAME="[`basename $BASH_SOURCE[0]`]"
+DIR="$( cd "$( dirname "$BASH_SOURCE[0]" )" && pwd )"
+echo "$NAME DIR=$DIR"
+
+MAINDIR="$(dirname $DIR)"
+MAINDIR="$(dirname $MAINDIR)"
+
+sparktkpackage=$MAINDIR/sparktkinstall
 
 # Remove the sparktk package so it doesn't shadow ours
 sudo pip2.7 uninstall -y sparktk
 
 echo "Python path"
-export PYTHONPATH=$MAINDIR/python:$MAINDIR/regression-tests:/opt/cloudera/parcels/CDH/lib/spark/python/pyspark:/usr/lib/python2.7/site-packages/:$MAINDIR/graphframes:$PYTHONPATH
+export PYTHONPATH=$MAINDIR/regression-tests:$MAINDIR/regression-tests/sparktkregtests/lib/udftestlib:/opt/cloudera/parcels/CDH/lib/spark/python/pyspark:$MAINDIR/graphframes:/usr/lib/python2.7/site-packages/:$PYTHONPATH
 echo $PYTHONPATH
 
 export SPARKTK_HOME=$sparktkpackage/
@@ -33,4 +40,4 @@ echo "spark tk home"
 echo $SPARKTK_HOME
 
 export DIR
-py.test --cov=$DIR/../../python/sparktk --cov-config=$DIR/pycoverage.ini --cov-report=html:pytest --boxed -n10 --ignore $MAINDIR/regression-tests/sparktkregtests/testcases/scoretests $MAINDIR/regression-tests
+py.test --cov=$DIR/../../python/sparktk --cov-config=$DIR/pycoverage.ini --cov-report=html:$MAINDIR/coverage/pytest_regression --boxed -n10 $MAINDIR/regression-tests
